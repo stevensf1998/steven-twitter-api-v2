@@ -282,9 +282,9 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
     mediaId: string,
     metadata: Partial<MediaV2MetadataCreateParams>
   ) {
-    return this.post<MediaV2MetadataCreateResult>("/media/metadata", {
-      media_id: mediaId,
-      ...metadata,
+    return this.post<MediaV2MetadataCreateResult>("media/metadata", {
+      id: mediaId,
+      metadata,
     });
   }
 
