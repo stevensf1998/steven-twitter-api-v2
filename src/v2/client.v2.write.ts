@@ -1,5 +1,5 @@
-import { API_V2_PREFIX } from '../globals';
-import TwitterApiv2ReadOnly from './client.v2.read';
+import { API_V2_PREFIX } from "../globals";
+import TwitterApiv2ReadOnly from "./client.v2.read";
 import type {
   ListCreateV2Params,
   ListCreateV2Result,
@@ -21,10 +21,22 @@ import type {
   UserV2UnfollowResult,
   TweetV2BookmarkResult,
   EUploadMimeType,
-} from '../types';
-import TwitterApiv2LabsReadWrite from '../v2-labs/client.v2.labs.write';
-import { CreateDMConversationParams, PostDMInConversationParams, PostDMInConversationResult } from '../types/v2/dm.v2.types';
-import { MediaV2MediaCategory, MediaV2MetadataCreateParams, MediaV2MetadataCreateResult, MediaV2UploadAppendParams, MediaV2UploadFinalizeParams, MediaV2UploadInitParams, MediaV2UploadResponse } from '../types/v2/media.v2.types';
+} from "../types";
+import TwitterApiv2LabsReadWrite from "../v2-labs/client.v2.labs.write";
+import {
+  CreateDMConversationParams,
+  PostDMInConversationParams,
+  PostDMInConversationResult,
+} from "../types/v2/dm.v2.types";
+import {
+  MediaV2MediaCategory,
+  MediaV2MetadataCreateParams,
+  MediaV2MetadataCreateResult,
+  MediaV2UploadAppendParams,
+  MediaV2UploadFinalizeParams,
+  MediaV2UploadInitParams,
+  MediaV2UploadResponse,
+} from "../types/v2/media.v2.types";
 
 /**
  * Base Twitter v2 client with read/write rights.
@@ -48,7 +60,7 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
   public get labs() {
     if (this._labs) return this._labs;
 
-    return this._labs = new TwitterApiv2LabsReadWrite(this);
+    return (this._labs = new TwitterApiv2LabsReadWrite(this));
   }
 
   /* Tweets */
@@ -58,7 +70,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/tweets/hide-replies/api-reference/put-tweets-id-hidden
    */
   public hideReply(tweetId: string, makeHidden: boolean) {
-    return this.put<TweetV2HideReplyResult>('tweets/:id/hidden', { hidden: makeHidden }, { params: { id: tweetId } });
+    return this.put<TweetV2HideReplyResult>(
+      "tweets/:id/hidden",
+      { hidden: makeHidden },
+      { params: { id: tweetId } }
+    );
   }
 
   /**
@@ -68,7 +84,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public like(loggedUserId: string, targetTweetId: string) {
-    return this.post<TweetV2LikeResult>('users/:id/likes', { tweet_id: targetTweetId }, { params: { id: loggedUserId } });
+    return this.post<TweetV2LikeResult>(
+      "users/:id/likes",
+      { tweet_id: targetTweetId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -79,9 +99,13 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public unlike(loggedUserId: string, targetTweetId: string) {
-    return this.delete<TweetV2LikeResult>('users/:id/likes/:tweet_id', undefined, {
-      params: { id: loggedUserId, tweet_id: targetTweetId },
-    });
+    return this.delete<TweetV2LikeResult>(
+      "users/:id/likes/:tweet_id",
+      undefined,
+      {
+        params: { id: loggedUserId, tweet_id: targetTweetId },
+      }
+    );
   }
 
   /**
@@ -91,7 +115,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public retweet(loggedUserId: string, targetTweetId: string) {
-    return this.post<TweetV2RetweetResult>('users/:id/retweets', { tweet_id: targetTweetId }, { params: { id: loggedUserId } });
+    return this.post<TweetV2RetweetResult>(
+      "users/:id/retweets",
+      { tweet_id: targetTweetId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -102,25 +130,34 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public unretweet(loggedUserId: string, targetTweetId: string) {
-    return this.delete<TweetV2RetweetResult>('users/:id/retweets/:tweet_id', undefined, {
-      params: { id: loggedUserId, tweet_id: targetTweetId },
-    });
+    return this.delete<TweetV2RetweetResult>(
+      "users/:id/retweets/:tweet_id",
+      undefined,
+      {
+        params: { id: loggedUserId, tweet_id: targetTweetId },
+      }
+    );
   }
 
   /**
    * Creates a Tweet on behalf of an authenticated user.
    * https://developer.x.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
    */
-  public tweet(status: string, payload?: Partial<SendTweetV2Params>): Promise<TweetV2PostTweetResult>;
+  public tweet(
+    status: string,
+    payload?: Partial<SendTweetV2Params>
+  ): Promise<TweetV2PostTweetResult>;
   public tweet(payload: SendTweetV2Params): Promise<TweetV2PostTweetResult>;
-  public tweet(status: string | SendTweetV2Params, payload: Partial<SendTweetV2Params> = {}) {
-    if (typeof status === 'object') {
+  public tweet(
+    status: string | SendTweetV2Params,
+    payload: Partial<SendTweetV2Params> = {}
+  ) {
+    if (typeof status === "object") {
       payload = status;
     } else {
       payload = { text: status, ...payload };
     }
-
-    return this.post<TweetV2PostTweetResult>('tweets', payload);
+    return this.post<TweetV2PostTweetResult>("tweets", payload);
   }
 
   /**
@@ -134,29 +171,44 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    */
   public async uploadMedia(
     media: Buffer,
-    options: { media_type: `${EUploadMimeType}` | EUploadMimeType; media_category?: MediaV2MediaCategory },
+    options: {
+      media_type: `${EUploadMimeType}` | EUploadMimeType;
+      media_category?: MediaV2MediaCategory;
+    },
     chunkSize: number = 1024 * 1024
   ): Promise<string> {
+    if (this._requestMaker.gameTwitterAccessToken) {
+      const blob = new Blob([media]);
+      const formData = new FormData();
+
+      formData.append("file", blob);
+      const response = await this.postFormDataGame(`media/upload`, formData);
+      return response["media_id"];
+    }
     let media_category = options.media_category;
     // If no media category is provided, try to infer it from the media type
     if (!options.media_category) {
-      if (options.media_type.includes('gif')) {
-        media_category = 'tweet_gif';
-       } else if (options.media_type.includes('image')) {
-        media_category = 'tweet_image';
-      } else if (options.media_type.includes('video')) {
-        media_category = 'tweet_video';
+      if (options.media_type.includes("gif")) {
+        media_category = "tweet_gif";
+      } else if (options.media_type.includes("image")) {
+        media_category = "tweet_image";
+      } else if (options.media_type.includes("video")) {
+        media_category = "tweet_video";
       }
     }
 
     const initArguments: MediaV2UploadInitParams = {
-      command: 'INIT',
+      command: "INIT",
       media_type: options.media_type,
       total_bytes: media.length,
       media_category,
     };
 
-    const initResponse = await this.post<MediaV2UploadResponse>('media/upload', initArguments, { forceBodyMode: 'form-data' });
+    const initResponse = await this.post<MediaV2UploadResponse>(
+      "media/upload",
+      initArguments,
+      { forceBodyMode: "form-data" }
+    );
     const mediaId = initResponse.data.id;
 
     const chunksCount = Math.ceil(media.length / chunkSize);
@@ -168,21 +220,27 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
       const chunkedBuffer = Buffer.from(mediaChunk);
 
       const appendArguments: MediaV2UploadAppendParams = {
-        command: 'APPEND',
+        command: "APPEND",
         media_id: mediaId,
         segment_index: i,
         media: chunkedBuffer,
       };
 
-      await this.post('media/upload', appendArguments, { forceBodyMode: 'form-data' });
+      await this.post("media/upload", appendArguments, {
+        forceBodyMode: "form-data",
+      });
     }
 
     const finalizeArguments: MediaV2UploadFinalizeParams = {
-      command: 'FINALIZE',
+      command: "FINALIZE",
       media_id: mediaId,
     };
 
-    const finalizeResponse = await this.post<MediaV2UploadResponse>('media/upload', finalizeArguments, { forceBodyMode: 'form-data' });
+    const finalizeResponse = await this.post<MediaV2UploadResponse>(
+      "media/upload",
+      finalizeArguments,
+      { forceBodyMode: "form-data" }
+    );
     if (finalizeResponse.data.processing_info) {
       await this.waitForMediaProcessing(mediaId);
     }
@@ -191,8 +249,8 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
   }
 
   private async waitForMediaProcessing(mediaId: string): Promise<void> {
-    const response = await this.get<MediaV2UploadResponse>('media/upload', {
-      command: 'STATUS',
+    const response = await this.get<MediaV2UploadResponse>("media/upload", {
+      command: "STATUS",
       media_id: mediaId,
     });
 
@@ -200,15 +258,15 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
     if (!info) return;
 
     switch (info.state) {
-      case 'succeeded':
+      case "succeeded":
         return;
-      case 'failed':
+      case "failed":
         throw new Error(`Media processing failed: ${info.error?.message}`);
-      case 'pending':
-      case 'in_progress': {
+      case "pending":
+      case "in_progress": {
         const waitTime = info?.check_after_secs;
-        if(waitTime && waitTime > 0) {
-          await new Promise(resolve => setTimeout(resolve, waitTime * 1000));
+        if (waitTime && waitTime > 0) {
+          await new Promise((resolve) => setTimeout(resolve, waitTime * 1000));
           await this.waitForMediaProcessing(mediaId);
         }
       }
@@ -220,25 +278,43 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * This feature is currently only supported for images and GIFs.
    * https://docs.x.com/x-api/media/metadata-create
    */
-  public createMediaMetadata(mediaId: string, metadata: Partial<MediaV2MetadataCreateParams>) {
-    return this.post<MediaV2MetadataCreateResult>('media/metadata', { id: mediaId, metadata });
+  public createMediaMetadata(
+    mediaId: string,
+    metadata: Partial<MediaV2MetadataCreateParams>
+  ) {
+    return this.post<MediaV2MetadataCreateResult>("media/metadata", {
+      id: mediaId,
+      metadata,
+    });
   }
 
   /**
    * Reply to a Tweet on behalf of an authenticated user.
    * https://developer.x.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
    */
-  public reply(status: string, toTweetId: string, payload: Partial<SendTweetV2Params> = {}) {
-    const reply = { in_reply_to_tweet_id: toTweetId, ...payload.reply ?? {} };
+  public reply(
+    status: string,
+    toTweetId: string,
+    payload: Partial<SendTweetV2Params> = {}
+  ) {
+    const reply = { in_reply_to_tweet_id: toTweetId, ...(payload.reply ?? {}) };
 
-    return this.post<TweetV2PostTweetResult>('tweets', { text: status, ...payload, reply });
+    return this.post<TweetV2PostTweetResult>("tweets", {
+      text: status,
+      ...payload,
+      reply,
+    });
   }
 
   /**
    * Quote an existing Tweet on behalf of an authenticated user.
    * https://developer.x.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/post-tweets
    */
-  public quote(status: string, quotedTweetId: string, payload: Partial<SendTweetV2Params> = {}) {
+  public quote(
+    status: string,
+    quotedTweetId: string,
+    payload: Partial<SendTweetV2Params> = {}
+  ) {
     return this.tweet(status, { ...payload, quote_tweet_id: quotedTweetId });
   }
 
@@ -251,12 +327,18 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
 
     for (const tweet of tweets) {
       // Retrieve the last sent tweet
-      const lastTweet = postedTweets.length ? postedTweets[postedTweets.length - 1] : null;
+      const lastTweet = postedTweets.length
+        ? postedTweets[postedTweets.length - 1]
+        : null;
       // Build the tweet query params
-      const queryParams: SendTweetV2Params = { ...(typeof tweet === 'string' ? ({ text: tweet }) : tweet) };
+      const queryParams: SendTweetV2Params = {
+        ...(typeof tweet === "string" ? { text: tweet } : tweet),
+      };
       // Reply to an existing tweet if needed
-      const inReplyToId = lastTweet ? lastTweet.data.id : queryParams.reply?.in_reply_to_tweet_id;
-      const status = queryParams.text ?? '';
+      const inReplyToId = lastTweet
+        ? lastTweet.data.id
+        : queryParams.reply?.in_reply_to_tweet_id;
+      const status = queryParams.text ?? "";
 
       if (inReplyToId) {
         postedTweets.push(await this.reply(status, inReplyToId, queryParams));
@@ -273,7 +355,7 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/tweets/manage-tweets/api-reference/delete-tweets-id
    */
   public deleteTweet(tweetId: string) {
-    return this.delete<TweetV2DeleteTweetResult>('tweets/:id', undefined, {
+    return this.delete<TweetV2DeleteTweetResult>("tweets/:id", undefined, {
       params: {
         id: tweetId,
       },
@@ -290,7 +372,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    */
   public async bookmark(tweetId: string) {
     const user = await this.getCurrentUserV2Object();
-    return this.post<TweetV2BookmarkResult>('users/:id/bookmarks', { tweet_id: tweetId }, { params: { id: user.data.id } });
+    return this.post<TweetV2BookmarkResult>(
+      "users/:id/bookmarks",
+      { tweet_id: tweetId },
+      { params: { id: user.data.id } }
+    );
   }
 
   /**
@@ -301,7 +387,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    */
   public async deleteBookmark(tweetId: string) {
     const user = await this.getCurrentUserV2Object();
-    return this.delete<TweetV2BookmarkResult>('users/:id/bookmarks/:tweet_id', undefined, { params: { id: user.data.id, tweet_id: tweetId } });
+    return this.delete<TweetV2BookmarkResult>(
+      "users/:id/bookmarks/:tweet_id",
+      undefined,
+      { params: { id: user.data.id, tweet_id: tweetId } }
+    );
   }
 
   /* Users */
@@ -316,7 +406,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public follow(loggedUserId: string, targetUserId: string) {
-    return this.post<UserV2FollowResult>('users/:id/following', { target_user_id: targetUserId }, { params: { id: loggedUserId } });
+    return this.post<UserV2FollowResult>(
+      "users/:id/following",
+      { target_user_id: targetUserId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -328,9 +422,13 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public unfollow(loggedUserId: string, targetUserId: string) {
-    return this.delete<UserV2UnfollowResult>('users/:source_user_id/following/:target_user_id', undefined, {
-      params: { source_user_id: loggedUserId, target_user_id: targetUserId },
-    });
+    return this.delete<UserV2UnfollowResult>(
+      "users/:source_user_id/following/:target_user_id",
+      undefined,
+      {
+        params: { source_user_id: loggedUserId, target_user_id: targetUserId },
+      }
+    );
   }
 
   /**
@@ -341,7 +439,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID; you can obtain it through v1.1 API.
    */
   public block(loggedUserId: string, targetUserId: string) {
-    return this.post<UserV2BlockResult>('users/:id/blocking', { target_user_id: targetUserId }, { params: { id: loggedUserId } });
+    return this.post<UserV2BlockResult>(
+      "users/:id/blocking",
+      { target_user_id: targetUserId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -351,9 +453,13 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public unblock(loggedUserId: string, targetUserId: string) {
-    return this.delete<UserV2BlockResult>('users/:source_user_id/blocking/:target_user_id', undefined, {
-      params: { source_user_id: loggedUserId, target_user_id: targetUserId },
-    });
+    return this.delete<UserV2BlockResult>(
+      "users/:source_user_id/blocking/:target_user_id",
+      undefined,
+      {
+        params: { source_user_id: loggedUserId, target_user_id: targetUserId },
+      }
+    );
   }
 
   /**
@@ -363,7 +469,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public mute(loggedUserId: string, targetUserId: string) {
-    return this.post<UserV2MuteResult>('users/:id/muting', { target_user_id: targetUserId }, { params: { id: loggedUserId } });
+    return this.post<UserV2MuteResult>(
+      "users/:id/muting",
+      { target_user_id: targetUserId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -374,9 +484,13 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * **Note**: You must specify the currently logged user ID ; you can obtain it through v1.1 API.
    */
   public unmute(loggedUserId: string, targetUserId: string) {
-    return this.delete<UserV2MuteResult>('users/:source_user_id/muting/:target_user_id', undefined, {
-      params: { source_user_id: loggedUserId, target_user_id: targetUserId },
-    });
+    return this.delete<UserV2MuteResult>(
+      "users/:source_user_id/muting/:target_user_id",
+      undefined,
+      {
+        params: { source_user_id: loggedUserId, target_user_id: targetUserId },
+      }
+    );
   }
 
   /* Lists */
@@ -386,7 +500,7 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/post-lists
    */
   public createList(options: ListCreateV2Params) {
-    return this.post<ListCreateV2Result>('lists', options);
+    return this.post<ListCreateV2Result>("lists", options);
   }
 
   /**
@@ -394,7 +508,9 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/put-lists-id
    */
   public updateList(listId: string, options: ListUpdateV2Params = {}) {
-    return this.put<ListUpdateV2Result>('lists/:id', options, { params: { id: listId } });
+    return this.put<ListUpdateV2Result>("lists/:id", options, {
+      params: { id: listId },
+    });
   }
 
   /**
@@ -402,7 +518,9 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/delete-lists-id
    */
   public removeList(listId: string) {
-    return this.delete<ListDeleteV2Result>('lists/:id', undefined, { params: { id: listId } });
+    return this.delete<ListDeleteV2Result>("lists/:id", undefined, {
+      params: { id: listId },
+    });
   }
 
   /**
@@ -410,7 +528,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/list-members/api-reference/post-lists-id-members
    */
   public addListMember(listId: string, userId: string) {
-    return this.post<ListMemberV2Result>('lists/:id/members', { user_id: userId }, { params: { id: listId } });
+    return this.post<ListMemberV2Result>(
+      "lists/:id/members",
+      { user_id: userId },
+      { params: { id: listId } }
+    );
   }
 
   /**
@@ -418,7 +540,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/list-members/api-reference/delete-lists-id-members-user_id
    */
   public removeListMember(listId: string, userId: string) {
-    return this.delete<ListMemberV2Result>('lists/:id/members/:user_id', undefined, { params: { id: listId, user_id: userId } });
+    return this.delete<ListMemberV2Result>(
+      "lists/:id/members/:user_id",
+      undefined,
+      { params: { id: listId, user_id: userId } }
+    );
   }
 
   /**
@@ -426,7 +552,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/post-users-id-followed-lists
    */
   public subscribeToList(loggedUserId: string, listId: string) {
-    return this.post<ListFollowV2Result>('users/:id/followed_lists', { list_id: listId }, { params: { id: loggedUserId } });
+    return this.post<ListFollowV2Result>(
+      "users/:id/followed_lists",
+      { list_id: listId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -434,7 +564,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/delete-users-id-followed-lists-list_id
    */
   public unsubscribeOfList(loggedUserId: string, listId: string) {
-    return this.delete<ListFollowV2Result>('users/:id/followed_lists/:list_id', undefined, { params: { id: loggedUserId, list_id: listId } });
+    return this.delete<ListFollowV2Result>(
+      "users/:id/followed_lists/:list_id",
+      undefined,
+      { params: { id: loggedUserId, list_id: listId } }
+    );
   }
 
   /**
@@ -442,7 +576,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/post-users-id-pinned-lists
    */
   public pinList(loggedUserId: string, listId: string) {
-    return this.post<ListPinV2Result>('users/:id/pinned_lists', { list_id: listId }, { params: { id: loggedUserId } });
+    return this.post<ListPinV2Result>(
+      "users/:id/pinned_lists",
+      { list_id: listId },
+      { params: { id: loggedUserId } }
+    );
   }
 
   /**
@@ -450,7 +588,11 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/lists/manage-lists/api-reference/delete-users-id-pinned-lists-list_id
    */
   public unpinList(loggedUserId: string, listId: string) {
-    return this.delete<ListPinV2Result>('users/:id/pinned_lists/:list_id', undefined, { params: { id: loggedUserId, list_id: listId } });
+    return this.delete<ListPinV2Result>(
+      "users/:id/pinned_lists/:list_id",
+      undefined,
+      { params: { id: loggedUserId, list_id: listId } }
+    );
   }
 
   /* Direct messages */
@@ -459,8 +601,15 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * Creates a Direct Message on behalf of an authenticated user, and adds it to the specified conversation.
    * https://developer.x.com/en/docs/twitter-api/direct-messages/manage/api-reference/post-dm_conversations-dm_conversation_id-messages
    */
-  public sendDmInConversation(conversationId: string, message: PostDMInConversationParams) {
-    return this.post<PostDMInConversationResult>('dm_conversations/:dm_conversation_id/messages', message, { params: { dm_conversation_id: conversationId } });
+  public sendDmInConversation(
+    conversationId: string,
+    message: PostDMInConversationParams
+  ) {
+    return this.post<PostDMInConversationResult>(
+      "dm_conversations/:dm_conversation_id/messages",
+      message,
+      { params: { dm_conversation_id: conversationId } }
+    );
   }
 
   /**
@@ -468,8 +617,15 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * This method either creates a new one-to-one conversation or retrieves the current conversation and adds the Direct Message to it.
    * https://developer.x.com/en/docs/twitter-api/direct-messages/manage/api-reference/post-dm_conversations-with-participant_id-messages
    */
-  public sendDmToParticipant(participantId: string, message: PostDMInConversationParams) {
-    return this.post<PostDMInConversationResult>('dm_conversations/with/:participant_id/messages', message, { params: { participant_id: participantId } });
+  public sendDmToParticipant(
+    participantId: string,
+    message: PostDMInConversationParams
+  ) {
+    return this.post<PostDMInConversationResult>(
+      "dm_conversations/with/:participant_id/messages",
+      message,
+      { params: { participant_id: participantId } }
+    );
   }
 
   /**
@@ -477,6 +633,6 @@ export default class TwitterApiv2ReadWrite extends TwitterApiv2ReadOnly {
    * https://developer.x.com/en/docs/twitter-api/direct-messages/manage/api-reference/post-dm_conversations
    */
   public createDmConversation(options: CreateDMConversationParams) {
-    return this.post<PostDMInConversationResult>('dm_conversations', options);
+    return this.post<PostDMInConversationResult>("dm_conversations", options);
   }
 }

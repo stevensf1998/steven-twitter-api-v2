@@ -1,6 +1,6 @@
-import TwitterApiv1ReadWrite from '../v1/client.v1.write';
-import TwitterApiv2ReadWrite from '../v2/client.v2.write';
-import TwitterApiReadOnly from './readonly';
+import TwitterApiv1ReadWrite from "../v1/client.v1.write";
+import TwitterApiv2ReadWrite from "../v2/client.v2.write";
+import TwitterApiReadOnly from "./readonly";
 
 /**
  * Twitter v1.1 and v2 API client.
@@ -11,15 +11,16 @@ export default class TwitterApiReadWrite extends TwitterApiReadOnly {
 
   /* Direct access to subclients */
   public get v1() {
+    throw new Error("v1 is not supported");
     if (this._v1) return this._v1;
 
-    return this._v1 = new TwitterApiv1ReadWrite(this);
+    return (this._v1 = new TwitterApiv1ReadWrite(this));
   }
 
   public get v2() {
     if (this._v2) return this._v2;
 
-    return this._v2 = new TwitterApiv2ReadWrite(this);
+    return (this._v2 = new TwitterApiv2ReadWrite(this));
   }
 
   /**

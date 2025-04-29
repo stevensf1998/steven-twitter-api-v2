@@ -1,9 +1,8 @@
-import TwitterApiv1 from '../v1/client.v1';
-import TwitterApiv2 from '../v2/client.v2';
-import { TwitterApiError } from '../types';
-import TwitterApiReadWrite from './readwrite';
-import TwitterAds from '../ads/client.ads';
-
+import TwitterApiv1 from "../v1/client.v1";
+import TwitterApiv2 from "../v2/client.v2";
+import { TwitterApiError } from "../types";
+import TwitterApiReadWrite from "./readwrite";
+import TwitterAds from "../ads/client.ads";
 
 // "Real" exported client for usage of TwitterApi.
 /**
@@ -16,15 +15,16 @@ export class TwitterApi extends TwitterApiReadWrite {
 
   /* Direct access to subclients */
   public get v1() {
+    throw new Error("v1 is not supported");
     if (this._v1) return this._v1;
 
-    return this._v1 = new TwitterApiv1(this);
+    return (this._v1 = new TwitterApiv1(this));
   }
 
   public get v2() {
     if (this._v2) return this._v2;
 
-    return this._v2 = new TwitterApiv2(this);
+    return (this._v2 = new TwitterApiv2(this));
   }
 
   /**
@@ -39,48 +39,49 @@ export class TwitterApi extends TwitterApiReadWrite {
    */
   public get ads() {
     if (this._ads) return this._ads;
-    return this._ads = new TwitterAds(this);
+    return (this._ads = new TwitterAds(this));
   }
 
   /* Static helpers */
   public static getErrors(error: any) {
-    if (typeof error !== 'object')
-      return [];
+    if (typeof error !== "object") return [];
 
-    if (!('data' in error))
-      return [];
+    if (!("data" in error)) return [];
 
     return (error as TwitterApiError).data.errors ?? [];
   }
 
   /** Extract another image size than obtained in a `profile_image_url` or `profile_image_url_https` field of a user object. */
-  public static getProfileImageInSize(profileImageUrl: string, size: 'normal' | 'bigger' | 'mini' | 'original') {
-    const lastPart = profileImageUrl.split('/').pop()!;
-    const sizes = ['normal', 'bigger', 'mini'];
+  public static getProfileImageInSize(
+    profileImageUrl: string,
+    size: "normal" | "bigger" | "mini" | "original"
+  ) {
+    const lastPart = profileImageUrl.split("/").pop()!;
+    const sizes = ["normal", "bigger", "mini"];
 
     let originalUrl = profileImageUrl;
 
     for (const availableSize of sizes) {
       if (lastPart.includes(`_${availableSize}`)) {
-        originalUrl = profileImageUrl.replace(`_${availableSize}`, '');
+        originalUrl = profileImageUrl.replace(`_${availableSize}`, "");
         break;
       }
     }
 
-    if (size === 'original') {
+    if (size === "original") {
       return originalUrl;
     }
 
-    const extPos = originalUrl.lastIndexOf('.');
+    const extPos = originalUrl.lastIndexOf(".");
     if (extPos !== -1) {
       const ext = originalUrl.slice(extPos + 1);
-      return originalUrl.slice(0, extPos) + '_' + size + '.' + ext;
+      return originalUrl.slice(0, extPos) + "_" + size + "." + ext;
     } else {
-      return originalUrl + '_' + size;
+      return originalUrl + "_" + size;
     }
   }
 }
 
-export { default as TwitterApiReadWrite } from './readwrite';
-export { default as TwitterApiReadOnly } from './readonly';
+export { default as TwitterApiReadWrite } from "./readwrite";
+export { default as TwitterApiReadOnly } from "./readonly";
 export default TwitterApi;
