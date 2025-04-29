@@ -1,12 +1,19 @@
-import { IClientSettings, ITwitterApiClientPlugin, TClientTokens, TwitterApiPluginResponseOverride, TwitterRateLimit, TwitterResponse } from '../types';
-import TweetStream from '../stream/TweetStream';
-import type { ClientRequestArgs } from 'http';
-import { applyResponseHooks, hasRequestErrorPlugins } from '../plugins/helpers';
-import { trimUndefinedProperties } from '../helpers';
-import OAuth1Helper from './oauth1.helper';
-import RequestHandlerHelper from './request-handler.helper';
-import RequestParamHelpers from './request-param.helper';
-import { OAuth2Helper } from './oauth2.helper';
+import {
+  IClientSettings,
+  ITwitterApiClientPlugin,
+  TClientTokens,
+  TwitterApiPluginResponseOverride,
+  TwitterRateLimit,
+  TwitterResponse,
+} from "../types";
+import TweetStream from "../stream/TweetStream";
+import type { ClientRequestArgs } from "http";
+import { applyResponseHooks, hasRequestErrorPlugins } from "../plugins/helpers";
+import { trimUndefinedProperties } from "../helpers";
+import OAuth1Helper from "./oauth1.helper";
+import RequestHandlerHelper from "./request-handler.helper";
+import RequestParamHelpers from "./request-param.helper";
+import { OAuth2Helper } from "./oauth2.helper";
 import type {
   IGetHttpRequestArgs,
   IGetStreamRequestArgs,
@@ -15,8 +22,9 @@ import type {
   IWriteAuthHeadersArgs,
   TAcceptedInitToken,
   TRequestFullStreamData,
-} from '../types/request-maker.mixin.types';
-import { IComputedHttpRequestArgs } from '../types/request-maker.mixin.types';
+} from "../types/request-maker.mixin.types";
+import { IComputedHttpRequestArgs } from "../types/request-maker.mixin.types";
+import { API_V2_PREFIX, GAME_API_V2_PREFIX } from "../globals";
 
 export class ClientRequestMaker {
   // Public tokens
@@ -28,13 +36,14 @@ export class ClientRequestMaker {
   public basicToken?: string;
   public clientId?: string;
   public clientSecret?: string;
+  public gameTwitterAccessToken?: string;
   public rateLimits: { [endpoint: string]: TwitterRateLimit } = {};
   public clientSettings: Partial<IClientSettings> = {};
 
   // Private computed properties
   protected _oauth?: OAuth1Helper;
 
-  protected static readonly BODY_METHODS = new Set(['POST', 'PUT', 'PATCH']);
+  protected static readonly BODY_METHODS = new Set(["POST", "PUT", "PATCH"]);
 
   constructor(settings?: Partial<IClientSettings>) {
     if (settings) {
@@ -52,10 +61,14 @@ export class ClientRequestMaker {
   }
 
   /** Send a new request and returns a wrapped `Promise<TwitterResponse<T>`. */
-  public async send<T = any>(requestParams: IGetHttpRequestArgs) : Promise<TwitterResponse<T>> {
+  public async send<T = any>(
+    requestParams: IGetHttpRequestArgs
+  ): Promise<TwitterResponse<T>> {
     // Pre-request config hooks
     if (this.clientSettings.plugins?.length) {
-      const possibleResponse = await this.applyPreRequestConfigHooks(requestParams);
+      const possibleResponse = await this.applyPreRequestConfigHooks(
+        requestParams
+      );
 
       if (possibleResponse) {
         return possibleResponse;
@@ -63,6 +76,18 @@ export class ClientRequestMaker {
     }
 
     const args = this.getHttpRequestArgs(requestParams);
+
+    if (this.gameTwitterAccessToken) {
+      args.headers = {
+        ...args.headers,
+        ["x-api-key"]: this.gameTwitterAccessToken,
+      };
+
+      args.url = new URL(
+        args.url.toString().replace(API_V2_PREFIX, GAME_API_V2_PREFIX)
+      );
+    }
+
     const options: Partial<ClientRequestArgs> = {
       method: args.method,
       headers: args.headers,
@@ -84,22 +109,34 @@ export class ClientRequestMaker {
       url: args.url,
       options,
       body: args.body,
-      rateLimitSaver: enableRateLimitSave ? this.saveRateLimit.bind(this, args.rawUrl) : undefined,
+      rateLimitSaver: enableRateLimitSave
+        ? this.saveRateLimit.bind(this, args.rawUrl)
+        : undefined,
       requestEventDebugHandler: requestParams.requestEventDebugHandler,
-      compression: requestParams.compression ?? this.clientSettings.compression ?? true,
+      compression:
+        requestParams.compression ?? this.clientSettings.compression ?? true,
       forceParseMode: requestParams.forceParseMode,
-    })
-      .makeRequest();
+    }).makeRequest();
 
     if (hasRequestErrorPlugins(this)) {
-      request = this.applyResponseErrorHooks(requestParams, args, options, request);
+      request = this.applyResponseErrorHooks(
+        requestParams,
+        args,
+        options,
+        request
+      );
     }
 
     const response = await request;
 
     // Post-request hooks
     if (this.clientSettings.plugins?.length) {
-      const responseOverride = await this.applyPostRequestHooks(requestParams, args, options, response);
+      const responseOverride = await this.applyPostRequestHooks(
+        requestParams,
+        args,
+        options,
+        response
+      );
 
       if (responseOverride) {
         return responseOverride.value as TwitterResponse<T>;
@@ -115,11 +152,19 @@ export class ClientRequestMaker {
    * Request will be sent only if `autoConnect` is not set or `true`: return type will be `Promise<TweetStream>`.
    * If `autoConnect` is `false`, a `TweetStream` is directly returned and you should call `stream.connect()` by yourself.
    */
-  public sendStream<T = any>(requestParams: IGetHttpRequestArgs & IGetStreamRequestArgsSync) : TweetStream<T>;
-  public sendStream<T = any>(requestParams: IGetHttpRequestArgs & IGetStreamRequestArgsAsync) : Promise<TweetStream<T>>;
-  public sendStream<T = any>(requestParams: IGetHttpRequestArgs & IGetStreamRequestArgs) : Promise<TweetStream<T>> | TweetStream<T>;
+  public sendStream<T = any>(
+    requestParams: IGetHttpRequestArgs & IGetStreamRequestArgsSync
+  ): TweetStream<T>;
+  public sendStream<T = any>(
+    requestParams: IGetHttpRequestArgs & IGetStreamRequestArgsAsync
+  ): Promise<TweetStream<T>>;
+  public sendStream<T = any>(
+    requestParams: IGetHttpRequestArgs & IGetStreamRequestArgs
+  ): Promise<TweetStream<T>> | TweetStream<T>;
 
-  public sendStream<T = any>(requestParams: IGetHttpRequestArgs & IGetStreamRequestArgs) : Promise<TweetStream<T>> | TweetStream<T> {
+  public sendStream<T = any>(
+    requestParams: IGetHttpRequestArgs & IGetStreamRequestArgs
+  ): Promise<TweetStream<T>> | TweetStream<T> {
     // Pre-request hooks
     if (this.clientSettings.plugins) {
       this.applyPreStreamRequestConfigHooks(requestParams);
@@ -142,9 +187,12 @@ export class ClientRequestMaker {
       url: args.url,
       options,
       body: args.body,
-      rateLimitSaver: enableRateLimitSave ? this.saveRateLimit.bind(this, args.rawUrl) : undefined,
+      rateLimitSaver: enableRateLimitSave
+        ? this.saveRateLimit.bind(this, args.rawUrl)
+        : undefined,
       payloadIsError: requestParams.payloadIsError,
-      compression: requestParams.compression ?? this.clientSettings.compression ?? true,
+      compression:
+        requestParams.compression ?? this.clientSettings.compression ?? true,
     };
 
     const stream = new TweetStream<T>(requestData);
@@ -155,14 +203,12 @@ export class ClientRequestMaker {
     return stream.connect();
   }
 
-
   /* Token helpers */
 
   public initializeToken(token?: TAcceptedInitToken) {
-    if (typeof token === 'string') {
+    if (typeof token === "string") {
       this.bearerToken = token;
-    }
-    else if (typeof token === 'object' && 'appKey' in token) {
+    } else if (typeof token === "object" && "appKey" in token) {
       this.consumerToken = token.appKey;
       this.consumerSecret = token.appSecret;
 
@@ -172,51 +218,51 @@ export class ClientRequestMaker {
       }
 
       this._oauth = this.buildOAuth();
-    }
-    else if (typeof token === 'object' && 'username' in token) {
-      const key = encodeURIComponent(token.username) + ':' + encodeURIComponent(token.password);
-      this.basicToken = Buffer.from(key).toString('base64');
-    }
-    else if (typeof token === 'object' && 'clientId' in token) {
+    } else if (typeof token === "object" && "username" in token) {
+      const key =
+        encodeURIComponent(token.username) +
+        ":" +
+        encodeURIComponent(token.password);
+      this.basicToken = Buffer.from(key).toString("base64");
+    } else if (typeof token === "object" && "clientId" in token) {
       this.clientId = token.clientId;
       this.clientSecret = token.clientSecret;
+    } else if (typeof token === "object" && "gameTwitterAccessToken" in token) {
+      this.gameTwitterAccessToken = token.gameTwitterAccessToken;
     }
   }
 
   public getActiveTokens(): TClientTokens {
     if (this.bearerToken) {
       return {
-        type: 'oauth2',
+        type: "oauth2",
         bearerToken: this.bearerToken,
       };
-    }
-    else if (this.basicToken) {
+    } else if (this.basicToken) {
       return {
-        type: 'basic',
+        type: "basic",
         token: this.basicToken,
       };
-    }
-    else if (this.consumerSecret && this._oauth) {
+    } else if (this.consumerSecret && this._oauth) {
       return {
-        type: 'oauth-1.0a',
+        type: "oauth-1.0a",
         appKey: this.consumerToken!,
         appSecret: this.consumerSecret!,
         accessToken: this.accessToken,
         accessSecret: this.accessSecret,
       };
-    }
-    else if (this.clientId) {
+    } else if (this.clientId) {
       return {
-        type: 'oauth2-user',
+        type: "oauth2-user",
         clientId: this.clientId!,
       };
     }
-    return { type: 'none' };
+    return { type: "none" };
   }
 
   protected buildOAuth() {
     if (!this.consumerSecret || !this.consumerToken)
-      throw new Error('Invalid consumer tokens');
+      throw new Error("Invalid consumer tokens");
 
     return new OAuth1Helper({
       consumerKeys: { key: this.consumerToken, secret: this.consumerSecret },
@@ -224,15 +270,13 @@ export class ClientRequestMaker {
   }
 
   protected getOAuthAccessTokens() {
-    if (!this.accessSecret || !this.accessToken)
-      return;
+    if (!this.accessSecret || !this.accessToken) return;
 
     return {
       key: this.accessToken,
       secret: this.accessSecret,
     };
   }
-
 
   /* Plugin helpers */
 
@@ -244,7 +288,10 @@ export class ClientRequestMaker {
     return !!this.clientSettings.plugins?.length;
   }
 
-  public async applyPluginMethod<K extends keyof ITwitterApiClientPlugin>(method: K, args: Parameters<Required<ITwitterApiClientPlugin>[K]>[0]) {
+  public async applyPluginMethod<K extends keyof ITwitterApiClientPlugin>(
+    method: K,
+    args: Parameters<Required<ITwitterApiClientPlugin>[K]>[0]
+  ) {
     let returnValue: TwitterApiPluginResponseOverride | undefined;
 
     for (const plugin of this.getPlugins()) {
@@ -258,32 +305,41 @@ export class ClientRequestMaker {
     return returnValue;
   }
 
-
   /* Request helpers */
 
-  protected writeAuthHeaders({ headers, bodyInSignature, url, method, query, body }: IWriteAuthHeadersArgs) {
+  protected writeAuthHeaders({
+    headers,
+    bodyInSignature,
+    url,
+    method,
+    query,
+    body,
+  }: IWriteAuthHeadersArgs) {
     headers = { ...headers };
 
     if (this.bearerToken) {
-      headers.Authorization = 'Bearer ' + this.bearerToken;
-    }
-    else if (this.basicToken) {
+      headers.Authorization = "Bearer " + this.bearerToken;
+    } else if (this.basicToken) {
       // Basic auth, to request a bearer token
-      headers.Authorization = 'Basic ' + this.basicToken;
-    }
-    else if (this.clientId && this.clientSecret) {
+      headers.Authorization = "Basic " + this.basicToken;
+    } else if (this.clientId && this.clientSecret) {
       // Basic auth with clientId + clientSecret
-      headers.Authorization = 'Basic ' + OAuth2Helper.getAuthHeader(this.clientId, this.clientSecret);
-    }
-    else if (this.consumerSecret && this._oauth) {
+      headers.Authorization =
+        "Basic " + OAuth2Helper.getAuthHeader(this.clientId, this.clientSecret);
+    } else if (this.consumerSecret && this._oauth) {
       // Merge query and body
-      const data = bodyInSignature ? RequestParamHelpers.mergeQueryAndBodyForOAuth(query, body) : query;
+      const data = bodyInSignature
+        ? RequestParamHelpers.mergeQueryAndBodyForOAuth(query, body)
+        : query;
 
-      const auth = this._oauth.authorize({
-        url: url.toString(),
-        method,
-        data,
-      }, this.getOAuthAccessTokens());
+      const auth = this._oauth.authorize(
+        {
+          url: url.toString(),
+          method,
+          data,
+        },
+        this.getOAuthAccessTokens()
+      );
 
       headers = { ...headers, ...this._oauth.toHeader(auth) };
     }
@@ -293,8 +349,8 @@ export class ClientRequestMaker {
 
   protected getUrlObjectFromUrlString(url: string) {
     // Add protocol to URL if needed
-    if (!url.startsWith('http')) {
-      url = 'https://' + url;
+    if (!url.startsWith("http")) {
+      url = "https://" + url;
     }
 
     // Convert URL to object that will receive all URL modifications
@@ -302,17 +358,22 @@ export class ClientRequestMaker {
   }
 
   protected getHttpRequestArgs({
-    url: stringUrl, method, query: rawQuery = {},
-    body: rawBody = {}, headers,
-    forceBodyMode, enableAuth, params,
+    url: stringUrl,
+    method,
+    query: rawQuery = {},
+    body: rawBody = {},
+    headers,
+    forceBodyMode,
+    enableAuth,
+    params,
   }: IGetHttpRequestArgs): IComputedHttpRequestArgs {
     let body: string | Buffer | undefined = undefined;
     method = method.toUpperCase();
     headers = headers ?? {};
 
     // Add user agent header (Twitter recommends it)
-    if (!headers['x-user-agent']) {
-      headers['x-user-agent'] = 'Node.twitter-api-v2';
+    if (!headers["x-user-agent"]) {
+      headers["x-user-agent"] = "Node.twitter-api-v2";
     }
 
     const url = this.getUrlObjectFromUrlString(stringUrl);
@@ -334,18 +395,29 @@ export class ClientRequestMaker {
     }
 
     // OAuth signature should not include parameters when using multipart.
-    const bodyType = forceBodyMode ?? RequestParamHelpers.autoDetectBodyType(url);
+    const bodyType =
+      forceBodyMode ?? RequestParamHelpers.autoDetectBodyType(url);
 
     // If undefined or true, enable auth by headers
     if (enableAuth !== false) {
       // OAuth needs body signature only if body is URL encoded.
-      const bodyInSignature = ClientRequestMaker.BODY_METHODS.has(method) && bodyType === 'url';
+      const bodyInSignature =
+        ClientRequestMaker.BODY_METHODS.has(method) && bodyType === "url";
 
-      headers = this.writeAuthHeaders({ headers, bodyInSignature, method, query, url, body: rawBody });
+      headers = this.writeAuthHeaders({
+        headers,
+        bodyInSignature,
+        method,
+        query,
+        url,
+        body: rawBody,
+      });
     }
 
     if (ClientRequestMaker.BODY_METHODS.has(method)) {
-      body = RequestParamHelpers.constructBodyParams(rawBody, headers, bodyType) || undefined;
+      body =
+        RequestParamHelpers.constructBodyParams(rawBody, headers, bodyType) ||
+        undefined;
     }
 
     RequestParamHelpers.addQueryParamsToUrl(url, query);
@@ -361,7 +433,9 @@ export class ClientRequestMaker {
 
   /* Plugin helpers */
 
-  protected async applyPreRequestConfigHooks(requestParams: IGetHttpRequestArgs) {
+  protected async applyPreRequestConfigHooks(
+    requestParams: IGetHttpRequestArgs
+  ) {
     const url = this.getUrlObjectFromUrlString(requestParams.url);
 
     for (const plugin of this.getPlugins()) {
@@ -377,7 +451,9 @@ export class ClientRequestMaker {
     }
   }
 
-  protected applyPreStreamRequestConfigHooks(requestParams: IGetHttpRequestArgs) {
+  protected applyPreStreamRequestConfigHooks(
+    requestParams: IGetHttpRequestArgs
+  ) {
     const url = this.getUrlObjectFromUrlString(requestParams.url);
 
     for (const plugin of this.getPlugins()) {
@@ -389,8 +465,12 @@ export class ClientRequestMaker {
     }
   }
 
-  protected async applyPreRequestHooks(requestParams: IGetHttpRequestArgs, computedParams: IComputedHttpRequestArgs, requestOptions: Partial<ClientRequestArgs>) {
-    await this.applyPluginMethod('onBeforeRequest', {
+  protected async applyPreRequestHooks(
+    requestParams: IGetHttpRequestArgs,
+    computedParams: IComputedHttpRequestArgs,
+    requestOptions: Partial<ClientRequestArgs>
+  ) {
+    await this.applyPluginMethod("onBeforeRequest", {
       client: this,
       url: this.getUrlObjectFromUrlString(requestParams.url),
       params: requestParams,
@@ -399,8 +479,13 @@ export class ClientRequestMaker {
     });
   }
 
-  protected async applyPostRequestHooks(requestParams: IGetHttpRequestArgs, computedParams: IComputedHttpRequestArgs, requestOptions: Partial<ClientRequestArgs>, response: TwitterResponse<any>) {
-    return await this.applyPluginMethod('onAfterRequest', {
+  protected async applyPostRequestHooks(
+    requestParams: IGetHttpRequestArgs,
+    computedParams: IComputedHttpRequestArgs,
+    requestOptions: Partial<ClientRequestArgs>,
+    response: TwitterResponse<any>
+  ) {
+    return await this.applyPluginMethod("onAfterRequest", {
       client: this,
       url: this.getUrlObjectFromUrlString(requestParams.url),
       params: requestParams,
@@ -410,7 +495,19 @@ export class ClientRequestMaker {
     });
   }
 
-  protected applyResponseErrorHooks(requestParams: IGetHttpRequestArgs, computedParams: IComputedHttpRequestArgs, requestOptions: Partial<ClientRequestArgs>, promise: Promise<TwitterResponse<any>>) {
-    return promise.catch(applyResponseHooks.bind(this, requestParams, computedParams, requestOptions)) as Promise<TwitterResponse<any>>;
+  protected applyResponseErrorHooks(
+    requestParams: IGetHttpRequestArgs,
+    computedParams: IComputedHttpRequestArgs,
+    requestOptions: Partial<ClientRequestArgs>,
+    promise: Promise<TwitterResponse<any>>
+  ) {
+    return promise.catch(
+      applyResponseHooks.bind(
+        this,
+        requestParams,
+        computedParams,
+        requestOptions
+      )
+    ) as Promise<TwitterResponse<any>>;
   }
 }

@@ -1,17 +1,36 @@
-import type { IClientSettings, ITwitterApiClientPlugin, TwitterApiBasicAuth, TwitterApiOAuth2Init, TwitterApiTokens, TwitterRateLimit, TwitterResponse, UserV1, UserV2Result } from './types';
-import { ClientRequestMaker } from './client-mixins/request-maker.mixin';
-import TweetStream from './stream/TweetStream';
-import { sharedPromise, SharedPromise } from './helpers';
-import { API_V1_1_PREFIX, API_V2_PREFIX } from './globals';
-import type { TAcceptedInitToken, TCustomizableRequestArgs, TRequestBody, TRequestQuery } from './types/request-maker.mixin.types';
+import type {
+  IClientSettings,
+  ITwitterApiClientPlugin,
+  TwitterApiBasicAuth,
+  TwitterApiOAuth2Init,
+  TwitterApiTokens,
+  TwitterRateLimit,
+  TwitterResponse,
+  UserV1,
+  UserV2Result,
+} from "./types";
+import { ClientRequestMaker } from "./client-mixins/request-maker.mixin";
+import TweetStream from "./stream/TweetStream";
+import { sharedPromise, SharedPromise } from "./helpers";
+import { API_V1_1_PREFIX, API_V2_PREFIX, GAME_API_V2_PREFIX } from "./globals";
+import type {
+  TAcceptedInitToken,
+  TCustomizableRequestArgs,
+  TRequestBody,
+  TRequestQuery,
+} from "./types/request-maker.mixin.types";
 
 export type TGetClientRequestArgs = TCustomizableRequestArgs & {
   prefix?: string;
   fullResponse?: boolean;
 };
 
-type TGetClientRequestArgsFullResponse = TClientRequestArgs & { fullResponse: true };
-type TGetClientRequestArgsDataResponse = TClientRequestArgs & { fullResponse?: false };
+type TGetClientRequestArgsFullResponse = TClientRequestArgs & {
+  fullResponse: true;
+};
+type TGetClientRequestArgsDataResponse = TClientRequestArgs & {
+  fullResponse?: false;
+};
 
 export type TClientRequestArgs = TCustomizableRequestArgs & {
   prefix?: string;
@@ -19,8 +38,12 @@ export type TClientRequestArgs = TCustomizableRequestArgs & {
   query?: TRequestQuery;
 };
 
-type TClientRequestArgsFullResponse = TClientRequestArgs & { fullResponse: true };
-type TClientRequestArgsDataResponse = TClientRequestArgs & { fullResponse?: false };
+type TClientRequestArgsFullResponse = TClientRequestArgs & {
+  fullResponse: true;
+};
+type TClientRequestArgsDataResponse = TClientRequestArgs & {
+  fullResponse?: false;
+};
 
 export type TStreamClientRequestArgs = TCustomizableRequestArgs & {
   prefix?: string;
@@ -35,8 +58,10 @@ export type TStreamClientRequestArgs = TCustomizableRequestArgs & {
   autoConnect?: boolean;
 };
 
-export type TStreamClientRequestArgsWithAutoConnect = TStreamClientRequestArgs & { autoConnect?: true };
-export type TStreamClientRequestArgsWithoutAutoConnect = TStreamClientRequestArgs & { autoConnect: false };
+export type TStreamClientRequestArgsWithAutoConnect =
+  TStreamClientRequestArgs & { autoConnect?: true };
+export type TStreamClientRequestArgsWithoutAutoConnect =
+  TStreamClientRequestArgs & { autoConnect: false };
 
 /**
  * Base class for Twitter instances
@@ -62,11 +87,17 @@ export default abstract class TwitterApiBase {
   /**
    * Create a new TwitterApi object with only client ID needed for OAuth2 user-flow.
    */
-  constructor(oauth2Init: TwitterApiOAuth2Init, settings?: Partial<IClientSettings>);
+  constructor(
+    oauth2Init: TwitterApiOAuth2Init,
+    settings?: Partial<IClientSettings>
+  );
   /**
    * Create a new TwitterApi object with Basic HTTP authentication.
    */
-  constructor(credentials: TwitterApiBasicAuth, settings?: Partial<IClientSettings>);
+  constructor(
+    credentials: TwitterApiBasicAuth,
+    settings?: Partial<IClientSettings>
+  );
   /**
    * Create a clone of {instance}.
    */
@@ -74,12 +105,11 @@ export default abstract class TwitterApiBase {
 
   public constructor(
     token?: TAcceptedInitToken | TwitterApiBase,
-    settings: Partial<IClientSettings> = {},
+    settings: Partial<IClientSettings> = {}
   ) {
     if (token instanceof TwitterApiBase) {
       this._requestMaker = token._requestMaker;
-    }
-    else {
+    } else {
       this._requestMaker = new ClientRequestMaker(settings);
       this._requestMaker.initializeToken(token);
     }
@@ -108,8 +138,12 @@ export default abstract class TwitterApiBase {
     return this._requestMaker.getPlugins();
   }
 
-  public getPluginOfType<T extends ITwitterApiClientPlugin>(type: { new(...args: any[]): T }): T | undefined {
-    return this.getPlugins().find(plugin => plugin instanceof type) as T | undefined;
+  public getPluginOfType<T extends ITwitterApiClientPlugin>(type: {
+    new (...args: any[]): T;
+  }): T | undefined {
+    return this.getPlugins().find((plugin) => plugin instanceof type) as
+      | T
+      | undefined;
   }
 
   /**
@@ -138,7 +172,7 @@ export default abstract class TwitterApiBase {
       return true;
     }
     // Timestamps are exprimed in seconds, JS works with ms
-    return (rateLimit.reset * 1000) < Date.now();
+    return rateLimit.reset * 1000 < Date.now();
   }
 
   /**
@@ -147,8 +181,12 @@ export default abstract class TwitterApiBase {
    * Get the last obtained Twitter rate limit information for {endpoint}.
    * (local data only, this should not ask anything to Twitter)
    */
-  public getLastRateLimitStatus(endpoint: string): TwitterRateLimit | undefined {
-    const endpointWithPrefix = endpoint.match(/^https?:\/\//) ? endpoint : (this._prefix + endpoint);
+  public getLastRateLimitStatus(
+    endpoint: string
+  ): TwitterRateLimit | undefined {
+    const endpointWithPrefix = endpoint.match(/^https?:\/\//)
+      ? endpoint
+      : this._prefix + endpoint;
     return this._requestMaker.getRateLimits()[endpointWithPrefix];
   }
 
@@ -163,11 +201,13 @@ export default abstract class TwitterApiBase {
       return this._currentUser.promise;
     }
 
-    this._currentUser = sharedPromise(() => this.get<UserV1>(
-      'account/verify_credentials.json',
-      { tweet_mode: 'extended' },
-      { prefix: API_V1_1_PREFIX },
-    ));
+    this._currentUser = sharedPromise(() =>
+      this.get<UserV1>(
+        "account/verify_credentials.json",
+        { tweet_mode: "extended" },
+        { prefix: API_V1_1_PREFIX }
+      )
+    );
 
     return this._currentUser.promise;
   }
@@ -188,27 +228,40 @@ export default abstract class TwitterApiBase {
       return this._currentUserV2.promise;
     }
 
-    this._currentUserV2 = sharedPromise(() => this.get<UserV2Result>('users/me', undefined, { prefix: API_V2_PREFIX }));
+    this._currentUserV2 = sharedPromise(() =>
+      this.get<UserV2Result>("users/me", undefined, {
+        prefix: this._requestMaker.gameTwitterAccessToken
+          ? GAME_API_V2_PREFIX
+          : API_V2_PREFIX,
+      })
+    );
 
     return this._currentUserV2.promise;
   }
 
   /* Direct HTTP methods */
 
-  async get<T = any>(url: string, query?: TRequestQuery, args?: TGetClientRequestArgsDataResponse) : Promise<T>;
-  async get<T = any>(url: string, query?: TRequestQuery, args?: TGetClientRequestArgsFullResponse) : Promise<TwitterResponse<T>>;
+  async get<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    args?: TGetClientRequestArgsDataResponse
+  ): Promise<T>;
+  async get<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    args?: TGetClientRequestArgsFullResponse
+  ): Promise<TwitterResponse<T>>;
 
   public async get<T = any>(
     url: string,
     query: TRequestQuery = {},
-    { fullResponse, prefix = this._prefix, ...rest }: TGetClientRequestArgs = {},
-  ) : Promise<T | TwitterResponse<T>> {
-    if (prefix)
-      url = prefix + url;
+    { fullResponse, prefix = this._prefix, ...rest }: TGetClientRequestArgs = {}
+  ): Promise<T | TwitterResponse<T>> {
+    if (prefix) url = prefix + url;
 
     const resp = await this._requestMaker.send<T>({
       url,
-      method: 'GET',
+      method: "GET",
       query,
       ...rest,
     });
@@ -216,20 +269,27 @@ export default abstract class TwitterApiBase {
     return fullResponse ? resp : resp.data;
   }
 
-  async delete<T = any>(url: string, query?: TRequestQuery, args?: TGetClientRequestArgsDataResponse) : Promise<T>;
-  async delete<T = any>(url: string, query?: TRequestQuery, args?: TGetClientRequestArgsFullResponse) : Promise<TwitterResponse<T>>;
+  async delete<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    args?: TGetClientRequestArgsDataResponse
+  ): Promise<T>;
+  async delete<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    args?: TGetClientRequestArgsFullResponse
+  ): Promise<TwitterResponse<T>>;
 
   public async delete<T = any>(
     url: string,
     query: TRequestQuery = {},
-    { fullResponse, prefix = this._prefix, ...rest }: TGetClientRequestArgs = {},
-  ) : Promise<T | TwitterResponse<T>> {
-    if (prefix)
-      url = prefix + url;
+    { fullResponse, prefix = this._prefix, ...rest }: TGetClientRequestArgs = {}
+  ): Promise<T | TwitterResponse<T>> {
+    if (prefix) url = prefix + url;
 
     const resp = await this._requestMaker.send<T>({
       url,
-      method: 'DELETE',
+      method: "DELETE",
       query,
       ...rest,
     });
@@ -237,16 +297,27 @@ export default abstract class TwitterApiBase {
     return fullResponse ? resp : resp.data;
   }
 
-  async post<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsDataResponse) : Promise<T>;
-  async post<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsFullResponse) : Promise<TwitterResponse<T>>;
+  async post<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsDataResponse
+  ): Promise<T>;
+  async post<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsFullResponse
+  ): Promise<TwitterResponse<T>>;
 
-  public async post<T = any>(url: string, body?: TRequestBody, { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}) : Promise<T | TwitterResponse<T>> {
-    if (prefix)
-      url = prefix + url;
+  public async post<T = any>(
+    url: string,
+    body?: TRequestBody,
+    { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}
+  ): Promise<T | TwitterResponse<T>> {
+    if (prefix) url = prefix + url;
 
     const resp = await this._requestMaker.send<T>({
       url,
-      method: 'POST',
+      method: "POST",
       body,
       ...rest,
     });
@@ -254,16 +325,54 @@ export default abstract class TwitterApiBase {
     return fullResponse ? resp : resp.data;
   }
 
-  async put<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsDataResponse) : Promise<T>;
-  async put<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsFullResponse) : Promise<TwitterResponse<T>>;
+  public async postFormDataGame<T = any>(
+    url: string,
+    body: FormData
+  ): Promise<T | TwitterResponse<T>> {
+    if (!this._requestMaker.gameTwitterAccessToken) {
+      throw new Error("Game Twitter access token is not set");
+    }
+    url = GAME_API_V2_PREFIX + url;
 
-  public async put<T = any>(url: string, body: TRequestBody, { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}) : Promise<T | TwitterResponse<T>> {
-    if (prefix)
-      url = prefix + url;
+    const response = await fetch(url, {
+      method: "POST",
+      body,
+      headers: {
+        "x-api-key": this._requestMaker.gameTwitterAccessToken,
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Error: ${response.status} ${response.statusText}\n${errorText}`
+      );
+    }
+
+    return response.json();
+  }
+
+  async put<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsDataResponse
+  ): Promise<T>;
+  async put<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsFullResponse
+  ): Promise<TwitterResponse<T>>;
+
+  public async put<T = any>(
+    url: string,
+    body: TRequestBody,
+    { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}
+  ): Promise<T | TwitterResponse<T>> {
+    if (prefix) url = prefix + url;
 
     const resp = await this._requestMaker.send<T>({
       url,
-      method: 'PUT',
+      method: "PUT",
       body,
       ...rest,
     });
@@ -271,47 +380,89 @@ export default abstract class TwitterApiBase {
     return fullResponse ? resp : resp.data;
   }
 
-  async patch<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsDataResponse) : Promise<T>;
-  async patch<T = any>(url: string, body?: TRequestBody, args?: TClientRequestArgsFullResponse) : Promise<TwitterResponse<T>>;
+  async patch<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsDataResponse
+  ): Promise<T>;
+  async patch<T = any>(
+    url: string,
+    body?: TRequestBody,
+    args?: TClientRequestArgsFullResponse
+  ): Promise<TwitterResponse<T>>;
 
-  public async patch<T = any>(url: string, body?: TRequestBody, { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}) : Promise<T | TwitterResponse<T>> {
-    if (prefix)
-      url = prefix + url;
+  public async patch<T = any>(
+    url: string,
+    body?: TRequestBody,
+    { fullResponse, prefix = this._prefix, ...rest }: TClientRequestArgs = {}
+  ): Promise<T | TwitterResponse<T>> {
+    if (prefix) url = prefix + url;
 
     const resp = await this._requestMaker.send<T>({
       url,
-      method: 'PATCH',
+      method: "PATCH",
       body,
       ...rest,
     });
 
     return fullResponse ? resp : resp.data;
   }
-
 
   /** Stream request helpers */
 
-  getStream<T = any>(url: string, query: TRequestQuery | undefined, options: TStreamClientRequestArgsWithoutAutoConnect) : TweetStream<T>;
-  getStream<T = any>(url: string, query?: TRequestQuery, options?: TStreamClientRequestArgsWithAutoConnect) : Promise<TweetStream<T>>;
-  getStream<T = any>(url: string, query?: TRequestQuery, options?: TStreamClientRequestArgs) : Promise<TweetStream<T>> | TweetStream<T>;
+  getStream<T = any>(
+    url: string,
+    query: TRequestQuery | undefined,
+    options: TStreamClientRequestArgsWithoutAutoConnect
+  ): TweetStream<T>;
+  getStream<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    options?: TStreamClientRequestArgsWithAutoConnect
+  ): Promise<TweetStream<T>>;
+  getStream<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    options?: TStreamClientRequestArgs
+  ): Promise<TweetStream<T>> | TweetStream<T>;
 
-  public getStream<T = any>(url: string, query?: TRequestQuery, { prefix = this._prefix, ...rest }: TStreamClientRequestArgs = {}) : Promise<TweetStream<T>> | TweetStream<T> {
+  public getStream<T = any>(
+    url: string,
+    query?: TRequestQuery,
+    { prefix = this._prefix, ...rest }: TStreamClientRequestArgs = {}
+  ): Promise<TweetStream<T>> | TweetStream<T> {
     return this._requestMaker.sendStream<T>({
       url: prefix ? prefix + url : url,
-      method: 'GET',
+      method: "GET",
       query,
       ...rest,
     });
   }
 
-  postStream<T = any>(url: string, body: TRequestBody | undefined, options: TStreamClientRequestArgsWithoutAutoConnect) : TweetStream<T>;
-  postStream<T = any>(url: string, body?: TRequestBody, options?: TStreamClientRequestArgsWithAutoConnect) : Promise<TweetStream<T>>;
-  postStream<T = any>(url: string, body?: TRequestBody, options?: TStreamClientRequestArgs) : Promise<TweetStream<T>> | TweetStream<T>;
+  postStream<T = any>(
+    url: string,
+    body: TRequestBody | undefined,
+    options: TStreamClientRequestArgsWithoutAutoConnect
+  ): TweetStream<T>;
+  postStream<T = any>(
+    url: string,
+    body?: TRequestBody,
+    options?: TStreamClientRequestArgsWithAutoConnect
+  ): Promise<TweetStream<T>>;
+  postStream<T = any>(
+    url: string,
+    body?: TRequestBody,
+    options?: TStreamClientRequestArgs
+  ): Promise<TweetStream<T>> | TweetStream<T>;
 
-  public postStream<T = any>(url: string, body?: TRequestBody, { prefix = this._prefix, ...rest }: TStreamClientRequestArgs = {}) : Promise<TweetStream<T>> | TweetStream<T> {
+  public postStream<T = any>(
+    url: string,
+    body?: TRequestBody,
+    { prefix = this._prefix, ...rest }: TStreamClientRequestArgs = {}
+  ): Promise<TweetStream<T>> | TweetStream<T> {
     return this._requestMaker.sendStream<T>({
       url: prefix ? prefix + url : url,
-      method: 'POST',
+      method: "POST",
       body,
       ...rest,
     });
