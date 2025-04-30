@@ -50,6 +50,34 @@ const user = await readOnlyClient.v2.userByUsername("plhery");
 await twitterClient.v2.tweet("Hello, this is a test.");
 ```
 
+To get the access token, run the following command:
+
+```bash
+npx @virtuals-protocol/game-twitter-plugin auth -k <GAME_API_KEY>
+```
+
+Here is an example run:
+
+```bash
+npx @virtuals-protocol/game-twitter-plugin auth -k apt-xxxxxxxxxx
+```
+
+You will see the following output:
+
+```
+Waiting for authentication...
+
+Visit the following URL to authenticate:
+https://x.com/i/oauth2/authorize?response_type=code&client_id=VVdyZ0t4WFFRMjBlMzVaczZyMzU6MTpjaQ&redirect_uri=http%3A%2F%2Flocalhost%3A8714%2Fcallback&state=866c82c0-e3f6-444e-a2de-e58bcc95f08b&code_challenge=K47t-0Mcl8B99ufyqmwJYZFB56fiXiZf7f3euQ4H2_0&code_challenge_method=s256&scope=tweet.read%20tweet.write%20users.read%20offline.access
+```
+
+After authenticating, you will receive the following message:
+
+```
+Authenticated! Here's your access token:
+apx-613f64069424d88c6fbf2e75c0c80a34
+```
+
 ## Why?
 
 The GAME Virtuals Protocol needs a reliable and type-safe way to interact with Virtual Twitter API v2. This package provides a streamlined experience for developers building on the GAME Virtuals Protocol ecosystem while maintaining the familiar Twitter API v2 interface.
@@ -58,10 +86,10 @@ The GAME Virtuals Protocol needs a reliable and type-safe way to interact with V
 
 A small feature comparison with other libs:
 
-| Package | API version(s) | Response typings | Pagination | Subdeps | Size (gzip) | Install size |
-|---------|---------------|------------------|------------|----------|-------------|--------------|
-| @virtuals-protocol/twitter-api-v2 | Virtual v2 | ✅ | ✅ | 0 | ~23 kB | [![install size badge](https://badgen.net/packagephobia/install/@virtuals-protocol/twitter-api-v2)](https://packagephobia.com/result?p=@virtuals-protocol/twitter-api-v2) |
-| twitter-v2 | v2 | ❌ | ❌ | 7 | ~4.5 kB | [![twitter-v2 install size badge](https://badgen.net/packagephobia/install/twitter-v2)](https://packagephobia.com/result?p=twitter-v2) |
+| Package                           | API version(s) | Response typings | Pagination | Subdeps | Size (gzip) | Install size                                                                                                                                                              |
+| --------------------------------- | -------------- | ---------------- | ---------- | ------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| @virtuals-protocol/twitter-api-v2 | Virtual v2     | ✅               | ✅         | 0       | ~23 kB      | [![install size badge](https://badgen.net/packagephobia/install/@virtuals-protocol/twitter-api-v2)](https://packagephobia.com/result?p=@virtuals-protocol/twitter-api-v2) |
+| twitter-v2                        | v2             | ❌               | ❌         | 7       | ~4.5 kB     | [![twitter-v2 install size badge](https://badgen.net/packagephobia/install/twitter-v2)](https://packagephobia.com/result?p=twitter-v2)                                    |
 
 ## Features
 
