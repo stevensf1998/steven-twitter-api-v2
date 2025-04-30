@@ -6,26 +6,22 @@
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "keywords": [
-    "Virtuals",
-    "Virtuals Protocol",
-    "Virtuals Twitter",
-    "Virtuals Twitter API",
-    "Virtuals Twitter API v2",
-    "Virtuals Twitter API v2 client",
-    "Virtuals Twitter API v2 client for Node.js",
     "twitter",
+    "virtuals",
+    "virtuals-protocol",
     "api",
     "typed",
     "types",
     "v2",
-  ]
+    "v1.1"
+  ],
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -b tsconfig.cjs.json",
     "build:esm": "tsc -b tsconfig.esm.json",
-    "dev": "nodemon --watch src --ext ts --exec \"npm run build\"",
     "build-doc": "typedoc src/index.ts --out tsdocs",
     "lint": "eslint --ext \".ts\" --ignore-path .gitignore .",
+    "dev": "nodemon --exec ts-node src/bin.ts",
     "mocha": "mocha -r ts-node/register --timeout 10000",
     "test": "npm run mocha 'test/**/*.test.ts'",
     "test-tweet": "npm run mocha 'test/tweet.*.test.ts'",
@@ -59,7 +55,11 @@
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.1",
     "typedoc": "^0.23.23",
-    "typescript": "^4.2.4"
+    "typescript": "^4.2.4",
+    "open": "^8.4.2"
+  },
+  "bin": {
+    "game-twitter-plugin": "./dist/esm/bin.js"
   },
   "bugs": {
     "url": "https://github.com/plhery/node-twitter-api/issues"

@@ -1,5 +1,6 @@
 export const API_V2_PREFIX = "https://api.x.com/2/";
-export const GAME_API_V2_PREFIX = "https://twitter.game.virtuals.io/tweets/2/";
+export const GAME_API_V2_PREFIX =
+  "https://519f-2001-e68-5427-1d2a-dddf-1396-bba2-4952.ngrok-free.app/tweets/2/";
 export const API_V2_LABS_PREFIX = "https://api.x.com/labs/2/";
 export const API_V1_1_PREFIX = "https://api.x.com/1.1/";
 export const API_V1_1_UPLOAD_PREFIX = "https://upload.x.com/1.1/";
