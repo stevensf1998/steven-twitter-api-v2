@@ -1,18 +1,24 @@
 {
-  "name": "twitter-api-v2",
-  "version": "1.22.0",
-  "description": "Strongly typed, full-featured, light, versatile yet powerful Twitter API v1.1 and v2 client for Node.js.",
+  "name": "@virtuals-protocol/game-twitter-api-v2",
+  "version": "0.1.0",
+  "description": "Strongly typed, full-featured, light, versatile yet powerful Virtual Twitter API v2 client for Node.js. Forked from twitter-api-v2.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "keywords": [
+    "Virtuals",
+    "Virtuals Protocol",
+    "Virtuals Twitter",
+    "Virtuals Twitter API",
+    "Virtuals Twitter API v2",
+    "Virtuals Twitter API v2 client",
+    "Virtuals Twitter API v2 client for Node.js",
     "twitter",
     "api",
     "typed",
     "types",
     "v2",
-    "v1.1"
-  ],
+  ]
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -b tsconfig.cjs.json",
