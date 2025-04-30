@@ -21,7 +21,6 @@
     "build:esm": "tsc -b tsconfig.esm.json",
     "build-doc": "typedoc src/index.ts --out tsdocs",
     "lint": "eslint --ext \".ts\" --ignore-path .gitignore .",
-    "dev": "nodemon --exec ts-node src/bin.ts",
     "mocha": "mocha -r ts-node/register --timeout 10000",
     "test": "npm run mocha 'test/**/*.test.ts'",
     "test-tweet": "npm run mocha 'test/tweet.*.test.ts'",
